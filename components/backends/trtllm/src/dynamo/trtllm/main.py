@@ -33,6 +33,7 @@ from dynamo.trtllm.request_handlers.handlers import (
 from dynamo.trtllm.utils.trtllm_utils import (
     Config,
     cmd_line_args,
+    get_cli_overrides,
     is_first_worker,
     parse_endpoint,
 )
@@ -173,8 +174,19 @@ async def init(runtime: DistributedRuntime, config: Config):
     }
 
     if config.extra_engine_args != "":
+        cli_overrides = get_cli_overrides(config) 
         # TODO: Support extra engine args from json file as well.
         arg_map = update_llm_args_with_extra_options(arg_map, config.extra_engine_args)
+
+        # Retain the command-line overrides for engine args.
+        for key, value in cli_overrides.items():  
+            if key in arg_map and arg_map[key] != value:  
+                logging.debug(  
+                    f"Command-line --{key.replace('_', '-')} ({value}) "  
+                    f"overriding engine config value ({arg_map[key]})"  
+                )  
+            arg_map[key] = value
+
     if config.publish_events_and_metrics:
         # 'event_buffer_max_size' is required to enable TRTLLM to publish kv cache events.
         kv_cache_config = None

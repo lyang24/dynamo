@@ -75,6 +75,26 @@ class Config:
             f"modality={self.modality})"
         )
 
+def get_cli_overrides(config: Config) -> dict:  
+    """  
+    Extract command-line arguments that differ from default values.  
+    """  
+    default_config = Config()  
+    cli_overrides = {}  
+      
+    # Get all attributes from the config object  
+    for field_name in dir(config):  
+        # Skip private methods and non-data attributes  
+        if field_name.startswith('_') or callable(getattr(config, field_name)):  
+            continue  
+              
+        config_value = getattr(config, field_name)  
+        default_value = getattr(default_config, field_name)  
+          
+        if config_value != default_value:  
+            cli_overrides[field_name] = config_value  
+      
+    return cli_overrides
 
 def is_first_worker(config):
     """
